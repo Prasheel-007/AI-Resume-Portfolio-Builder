@@ -1,16 +1,67 @@
-# React + Vite
+🚀 AI Career Builder
+Resume • Cover Letter • Portfolio Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An AI-driven web application that empowers students to bridge the gap between their technical skills and professional presentation. By leveraging the Google Gemini 2.5 Flash model, this tool generates ATS-optimized resumes and dynamic portfolios instantly.
 
-Currently, two official plugins are available:
+🔗 Project Links
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Live Demo: View Website 
 
-## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Repository: GitHub Link 
 
-## Expanding the ESLint configuration
+✨ Key Features
+AI-Powered Generation: Uses Gemini 2.5 Flash to transform raw user experience into professional bullet points.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+ATS Optimization: Specifically engineered prompts to ensure content passes through recruitment filters.
+
+
+3-in-1 Tool: Generate a Resume, Cover Letter, and Portfolio data from a single profile entry.
+
+Modern UI: A fast, responsive dark-mode interface built with React and Tailwind CSS.
+
+🛠️ Tech Stack
+
+Frontend: React.js (Vite) 
+
+
+Styling: Tailwind CSS 
+
+
+AI Model: Google Gemini 2.5 Flash 
++1
+
+
+Deployment: GitHub Pages 
+
+🏗️ How it Works
+
+User Input: Users provide their name, skills, and "messy" experience.
+
+
+AI Processing: The Google Generative AI SDK sends a structured prompt to Gemini.
+
+
+Contextual Logic: The model uses Multi-Head Self-Attention to maintain professional context.
+
+
+Instant Preview: The results are rendered in real-time for the user to review.
+
+🔧 Installation & Setup
+Clone the repository: git clone https://github.com/Prasheel-007/AI-Resume-Portfolio-Builder.git
+
+Install dependencies: npm install
+
+Set up your .env file with your VITE_GEMINI_API_KEY.
+
+Run locally: npm run dev
+
+🔮 Future Scope
+
+LinkedIn/GitHub OAuth: Direct data fetching for faster profile setup.
+
+
+AI Mock Interviews: Personalized interview prep based on the generated resume.
+
+
+Advanced Templates: Multiple PDF/DOCX downloadable formats.
