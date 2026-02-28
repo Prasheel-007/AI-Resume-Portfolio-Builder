@@ -67,22 +67,34 @@ function App() {
     setLoading(false);
   };
 
-  // --- AI FUNCTION: PORTFOLIO BIO ---
+  // --- AI FUNCTION: PORTFOLIO BIO (UPDATED FOR WEB GENERATION) ---
   const generatePortfolio = async () => {
     if (!sharedData.name) return alert("Please enter your Name in Step 1!");
     setLoading(true);
+
+    // We now tell Gemini to act as a web developer and write pure HTML
     const prompt = `
-      Write a creative "About Me" bio and a "Project Showcase" section for a personal portfolio website.
+      You are an expert frontend web developer. Create a stunning, single-page personal portfolio website for ${sharedData.name}.
       
-      Name: ${sharedData.name}
       Skills: ${sharedData.skills}
       Experience: ${sharedData.rawExperience}
+      Email: ${sharedData.email}
       
-      Tone: Exciting, innovative, and tech-savvy. 
-      Format: Use Markdown-style headers (###) for sections.
+      Requirements:
+      1. Return ONLY pure, raw HTML code. DO NOT wrap it in markdown code blocks (like \`\`\`html). No explanations.
+      2. Include <script src="https://cdn.tailwindcss.com"></script> in the <head> for styling.
+      3. Use a modern, dark-theme UI with a Hero section, About section, and a Projects section.
+      4. Ensure it is fully responsive.
     `;
-    const result = await generateResumeContent(prompt);
-    setPortfolioResult(result);
+
+    try {
+      let result = await generateResumeContent(prompt);
+      // Clean up the output just in case the AI still tries to add markdown backticks
+      result = result.replace(/```html/gi, '').replace(/```/g, '').trim();
+      setPortfolioResult(result);
+    } catch (error) {
+      alert("Error generating portfolio. Please try again.");
+    }
     setLoading(false);
   };
 
@@ -182,12 +194,12 @@ function App() {
               {activeTab === 'portfolio' && (
                 <div className="animate-in fade-in duration-300">
                   <h3 className="text-xl font-bold text-white mb-1">Portfolio Generator</h3>
-                  <p className="text-slate-400 text-sm mb-4">Generates a catchy "About Me" and "Projects" layout.</p>
+                  <p className="text-slate-400 text-sm mb-4">Generates a fully coded, responsive portfolio website.</p>
                   <div className="bg-orange-900/30 border border-orange-500/30 p-4 rounded-lg mb-4 text-orange-200 text-sm">
                     <strong>Tip:</strong> Ensure you filled out Step 1 completely for the best result!
                   </div>
                   <button onClick={generatePortfolio} disabled={loading} className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-600 text-white font-bold rounded-lg transition-colors flex justify-center items-center gap-2">
-                    {loading ? "Creating..." : "✨ Generate Portfolio Bio"}
+                    {loading ? "Creating Web Page..." : "✨ Generate Portfolio Website"}
                   </button>
                 </div>
               )}
@@ -205,26 +217,41 @@ function App() {
             <div className="bg-white border-b border-slate-200 p-5 flex justify-between items-center z-10">
               <h3 className="font-bold flex items-center gap-2 text-lg">
                 <Sparkles size={20} className="text-yellow-500" />
-                {activeTab === 'resume' ? "Resume Preview" : activeTab === 'letter' ? "Letter Preview" : "Portfolio Preview"}
+                {activeTab === 'resume' ? "Resume Preview" : activeTab === 'letter' ? "Letter Preview" : "Live Web Preview"}
               </h3>
 
-              {(resumeResult || letterResult || portfolioResult) && (
-                <button onClick={() => downloadPDF(activeTab === 'resume' ? "My_Resume" : activeTab === 'letter' ? "My_Cover_Letter" : "My_Portfolio_Bio", activeTab === 'resume' ? resumeResult : activeTab === 'letter' ? letterResult : portfolioResult)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
+              {/* Only show PDF download for Resume and Letter. Portfolio is HTML now! */}
+              {(activeTab === 'resume' && resumeResult) || (activeTab === 'letter' && letterResult) ? (
+                <button onClick={() => downloadPDF(activeTab === 'resume' ? "My_Resume" : "My_Cover_Letter", activeTab === 'resume' ? resumeResult : letterResult)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
                   <Download size={16} /> Save PDF
                 </button>
-              )}
+              ) : null}
             </div>
 
             {/* Preview Body (Scrollable) */}
-            <div className="p-8 flex-1 overflow-y-auto bg-[#fafafa]">
-              <div className="max-w-prose mx-auto whitespace-pre-wrap leading-relaxed text-slate-700 text-[15px]">
-                {activeTab === 'resume' ? resumeResult : activeTab === 'letter' ? letterResult : portfolioResult || (
-                  <div className="text-slate-400 text-center mt-32 italic flex flex-col items-center gap-4">
-                    <FileText size={48} className="opacity-20" />
-                    Your AI-generated document will appear here...
-                  </div>
-                )}
-              </div>
+            <div className={`flex-1 overflow-y-auto bg-[#fafafa] ${activeTab === 'portfolio' ? 'p-0' : 'p-8'}`}>
+
+              {/* IF PORTFOLIO TAB IS ACTIVE AND WE HAVE A RESULT: RENDER IFRAME */}
+              {activeTab === 'portfolio' && portfolioResult ? (
+                <iframe
+                  srcDoc={portfolioResult}
+                  className="w-full h-full min-h-[600px] border-0 bg-white"
+                  title="Portfolio Preview"
+                  sandbox="allow-scripts"
+                />
+              ) : (
+                /* OTHERWISE: RENDER TEXT FOR RESUME/LETTER OR EMPTY STATE */
+                <div className="max-w-prose mx-auto whitespace-pre-wrap leading-relaxed text-slate-700 text-[15px]">
+                  {activeTab === 'resume' && resumeResult ? resumeResult :
+                    activeTab === 'letter' && letterResult ? letterResult : (
+                      <div className="text-slate-400 text-center mt-32 italic flex flex-col items-center gap-4">
+                        <FileText size={48} className="opacity-20" />
+                        Your AI-generated document will appear here...
+                      </div>
+                    )}
+                </div>
+              )}
+
             </div>
 
           </div>
