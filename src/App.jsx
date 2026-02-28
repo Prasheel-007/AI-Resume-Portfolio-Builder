@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { generateResumeContent } from './aiConfig';
 import jsPDF from 'jspdf';
-import { FileText, Mail, Globe, Download, Sparkles, User, Briefcase } from 'lucide-react';
+import { FileText, Mail, Globe, Download, Sparkles, User } from 'lucide-react';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('resume'); // 'resume', 'letter', or 'portfolio'
+  const [activeTab, setActiveTab] = useState('resume');
   const [loading, setLoading] = useState(false);
 
-  // --- 1. SHARED DATA (Typed once, used everywhere) ---
+  // --- 1. SHARED DATA ---
   const [sharedData, setSharedData] = useState({
     name: "",
     email: "",
     skills: "",
-    rawExperience: "" // The messy text user types
+    rawExperience: ""
   });
 
   // --- 2. SPECIFIC INPUTS ---
@@ -25,9 +25,8 @@ function App() {
   const [letterResult, setLetterResult] = useState("");
   const [portfolioResult, setPortfolioResult] = useState("");
 
-  // Handle Shared Input Changes
   const handleSharedChange = (e) => {
-    setSharedData({...sharedData, [e.target.name]: e.target.value});
+    setSharedData({ ...sharedData, [e.target.name]: e.target.value });
   };
 
   // --- AI FUNCTION: RESUME ---
@@ -68,7 +67,7 @@ function App() {
     setLoading(false);
   };
 
-  // --- AI FUNCTION: PORTFOLIO BIO (NEW!) ---
+  // --- AI FUNCTION: PORTFOLIO BIO ---
   const generatePortfolio = async () => {
     if (!sharedData.name) return alert("Please enter your Name in Step 1!");
     setLoading(true);
@@ -92,163 +91,148 @@ function App() {
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.text(filename.replace(/_/g, " "), 20, 20);
-    
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    
-    // Split long text to fit page width
+
     const splitText = doc.splitTextToSize(content || "", 180);
     doc.text(splitText, 20, 30);
-    
+
     doc.save(`${filename}.pdf`);
   };
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '20px', fontFamily: 'Segoe UI, sans-serif', color: '#333' }}>
-      
+    <div className="min-h-screen bg-[#1e1e24] text-slate-200 p-4 md:p-8 font-sans selection:bg-blue-500 selection:text-white">
+
       {/* HEADER */}
-      <header style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ color: '#2563eb', margin: 0, fontSize: '2.5rem' }}>🚀 AI Career Builder</h1>
-        <p style={{ color: '#666', fontSize: '1.1rem' }}>Resume • Cover Letter • Portfolio Generator</p>
+      <header className="max-w-7xl mx-auto mb-8 text-center lg:text-left">
+        <h1 className="text-3xl md:text-5xl font-extrabold text-blue-500 tracking-tight">
+          🚀 AI Career Builder
+        </h1>
+        <p className="text-slate-400 mt-2 text-sm md:text-lg">
+          Resume • Cover Letter • Portfolio Generator
+        </p>
       </header>
 
-      {/* --- SECTION 1: SHARED PROFILE (Step 1) --- */}
-      <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '30px', border: '1px solid #e5e7eb' }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#1f2937' }}>
-          <User size={24} color="#2563eb"/> Step 1: Your Core Profile
-        </h3>
-        <p style={{marginBottom: '15px', color: '#6b7280'}}>Enter your details once, and use them for all 3 tools.</p>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          <input name="name" placeholder="Full Name" onChange={handleSharedChange} style={inputStyle} />
-          <input name="email" placeholder="Email Address" onChange={handleSharedChange} style={inputStyle} />
-          <input name="skills" placeholder="Skills (React, Python, Java...)" onChange={handleSharedChange} style={{...inputStyle, gridColumn: 'span 2'}} />
-          <textarea name="rawExperience" placeholder="Paste your messy experience here (e.g. I built a crop prediction app using python...)" onChange={handleSharedChange} style={{...inputStyle, gridColumn: 'span 2', height: '80px'}} />
-        </div>
-      </div>
+      {/* MAIN 2-COLUMN GRID */}
+      <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-      {/* --- TABS NAVIGATION --- */}
-      <div style={{ display: 'flex', gap: '5px', paddingLeft: '10px' }}>
-        <button onClick={() => setActiveTab('resume')} style={activeTab === 'resume' ? activeTabStyle : inactiveTabStyle}>
-          <FileText size={18}/> Resume
-        </button>
-        <button onClick={() => setActiveTab('letter')} style={activeTab === 'letter' ? activeTabStyle : inactiveTabStyle}>
-          <Mail size={18}/> Cover Letter
-        </button>
-        <button onClick={() => setActiveTab('portfolio')} style={activeTab === 'portfolio' ? activeTabStyle : inactiveTabStyle}>
-          <Globe size={18}/> Portfolio
-        </button>
-      </div>
+        {/* LEFT SIDE: Inputs (Takes 5/12 columns on desktop) */}
+        <div className="lg:col-span-5 space-y-6">
 
-      {/* --- WORKSPACE AREA (Step 2) --- */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px', background: '#f8f9fa', padding: '25px', borderRadius: '0 12px 12px 12px', border: '1px solid #e5e7eb' }}>
-        
-        {/* LEFT COLUMN: SPECIFIC INPUTS */}
-        <div>
-          {activeTab === 'resume' && (
-            <div className="fade-in">
-              <h3 style={{marginTop: 0}}>Resume Builder</h3>
-              <p style={subTextStyle}>AI will turn your raw experience into professional bullet points.</p>
-              <label style={labelStyle}>Target Job Title</label>
-              <input 
-                placeholder="e.g. Frontend Developer" 
-                value={resumeJobTitle} 
-                onChange={(e) => setResumeJobTitle(e.target.value)} 
-                style={inputStyle} 
-              />
-              <button onClick={generateResume} disabled={loading} style={buttonStyle}>
-                {loading ? "Generating..." : "✨ Generate Resume Points"}
-              </button>
-            </div>
-          )}
-
-          {activeTab === 'letter' && (
-            <div className="fade-in">
-              <h3 style={{marginTop: 0}}>Cover Letter Writer</h3>
-              <p style={subTextStyle}>AI will write a letter connecting your profile to this company.</p>
-              <label style={labelStyle}>Company Name</label>
-              <input 
-                placeholder="e.g. Google" 
-                value={letterCompany} 
-                onChange={(e) => setLetterCompany(e.target.value)} 
-                style={inputStyle} 
-              />
-              <label style={labelStyle}>Job Description (Optional)</label>
-              <textarea 
-                placeholder="Paste the job requirements here..." 
-                value={letterJobDesc} 
-                onChange={(e) => setLetterJobDesc(e.target.value)} 
-                style={{...inputStyle, height: '100px'}} 
-              />
-              <button onClick={generateLetter} disabled={loading} style={{...buttonStyle, background: '#7c3aed'}}>
-                {loading ? "Writing..." : "✨ Write Cover Letter"}
-              </button>
-            </div>
-          )}
-
-          {activeTab === 'portfolio' && (
-            <div className="fade-in">
-              <h3 style={{marginTop: 0}}>Portfolio Generator</h3>
-              <p style={subTextStyle}>Generates a catchy "About Me" and "Project Showcase" for your website.</p>
-              <div style={{background: '#fff7ed', padding: '15px', borderRadius: '8px', border: '1px solid #ffedd5', marginBottom: '15px'}}>
-                <p style={{margin: 0, fontSize: '0.9rem', color: '#9a3412'}}>
-                  <strong>Tip:</strong> Ensure you filled out "Skills" and "Experience" in Step 1 for the best result!
-                </p>
-              </div>
-              <button onClick={generatePortfolio} disabled={loading} style={{...buttonStyle, background: '#ea580c'}}>
-                {loading ? "Creating..." : "✨ Generate Portfolio Bio"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT COLUMN: PREVIEW & DOWNLOAD */}
-        <div style={{ background: 'white', padding: '25px', borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minHeight: '350px', display: 'flex', flexDirection: 'column' }}>
-          
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px'}}>
-            <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <Sparkles size={18} color="#fbbf24" fill="#fbbf24"/> 
-              {activeTab === 'resume' ? "Resume Preview" : activeTab === 'letter' ? "Letter Preview" : "Portfolio Preview"}
+          {/* STEP 1: Core Profile */}
+          <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+            <h3 className="flex items-center gap-2 text-xl font-bold text-white mb-2">
+              <User size={24} className="text-blue-500" /> Step 1: Your Core Profile
             </h3>
-            
-            {(resumeResult || letterResult || portfolioResult) && (
-              <button 
-                onClick={() => downloadPDF(
-                  activeTab === 'resume' ? "My_Resume" : activeTab === 'letter' ? "My_Cover_Letter" : "My_Portfolio_Bio", 
-                  activeTab === 'resume' ? resumeResult : activeTab === 'letter' ? letterResult : portfolioResult
-                )} 
-                style={downloadBtnStyle}
-              >
-                <Download size={16}/> Save PDF
-              </button>
-            )}
+            <p className="text-slate-400 text-sm mb-4">Enter your details once, use them for all 3 tools.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input name="name" placeholder="Full Name" onChange={handleSharedChange} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" />
+              <input name="email" placeholder="Email Address" onChange={handleSharedChange} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" />
+              <input name="skills" placeholder="Skills (React, Python, Java...)" onChange={handleSharedChange} className="md:col-span-2 w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" />
+              <textarea name="rawExperience" placeholder="Paste your messy experience here (e.g. I built a crop prediction app...)" onChange={handleSharedChange} className="md:col-span-2 w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all h-24 resize-none" />
+            </div>
           </div>
-          
-          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#374151', flex: 1, fontSize: '0.95rem' }}>
-            {activeTab === 'resume' ? resumeResult : activeTab === 'letter' ? letterResult : portfolioResult || (
-              <div style={{color: '#9ca3af', textAlign: 'center', marginTop: '40px', fontStyle: 'italic'}}>
-                Results will appear here...
-              </div>
-            )}
+
+          {/* STEP 2: Tools Area */}
+          <div>
+            {/* TABS */}
+            <div className="flex gap-2 pl-4">
+              <button onClick={() => setActiveTab('resume')} className={`px-6 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-all ${activeTab === 'resume' ? 'bg-slate-800 text-blue-400 border-t border-l border-r border-slate-700' : 'bg-slate-900/50 text-slate-500 hover:text-slate-300'}`}>
+                <FileText size={18} /> Resume
+              </button>
+              <button onClick={() => setActiveTab('letter')} className={`px-6 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-all ${activeTab === 'letter' ? 'bg-slate-800 text-blue-400 border-t border-l border-r border-slate-700' : 'bg-slate-900/50 text-slate-500 hover:text-slate-300'}`}>
+                <Mail size={18} /> Letter
+              </button>
+              <button onClick={() => setActiveTab('portfolio')} className={`px-6 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-all ${activeTab === 'portfolio' ? 'bg-slate-800 text-blue-400 border-t border-l border-r border-slate-700' : 'bg-slate-900/50 text-slate-500 hover:text-slate-300'}`}>
+                <Globe size={18} /> Portfolio
+              </button>
+            </div>
+
+            {/* TAB CONTENT */}
+            <div className="bg-slate-800 p-6 rounded-b-2xl rounded-tr-2xl border border-slate-700 shadow-xl min-h-[250px]">
+
+              {activeTab === 'resume' && (
+                <div className="animate-in fade-in duration-300">
+                  <h3 className="text-xl font-bold text-white mb-1">Resume Builder</h3>
+                  <p className="text-slate-400 text-sm mb-4">AI turns your raw experience into professional bullet points.</p>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Target Job Title</label>
+                  <input placeholder="e.g. Frontend Developer" value={resumeJobTitle} onChange={(e) => setResumeJobTitle(e.target.value)} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all mb-4" />
+                  <button onClick={generateResume} disabled={loading} className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-bold rounded-lg transition-colors flex justify-center items-center gap-2">
+                    {loading ? "Generating..." : "✨ Generate Resume Points"}
+                  </button>
+                </div>
+              )}
+
+              {activeTab === 'letter' && (
+                <div className="animate-in fade-in duration-300">
+                  <h3 className="text-xl font-bold text-white mb-1">Cover Letter Writer</h3>
+                  <p className="text-slate-400 text-sm mb-4">AI writes a targeted letter for this specific company.</p>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Company Name</label>
+                  <input placeholder="e.g. Google" value={letterCompany} onChange={(e) => setLetterCompany(e.target.value)} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all mb-4" />
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Job Description (Optional)</label>
+                  <textarea placeholder="Paste requirements here..." value={letterJobDesc} onChange={(e) => setLetterJobDesc(e.target.value)} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all h-24 resize-none mb-4" />
+                  <button onClick={generateLetter} disabled={loading} className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-600 text-white font-bold rounded-lg transition-colors flex justify-center items-center gap-2">
+                    {loading ? "Writing..." : "✨ Write Cover Letter"}
+                  </button>
+                </div>
+              )}
+
+              {activeTab === 'portfolio' && (
+                <div className="animate-in fade-in duration-300">
+                  <h3 className="text-xl font-bold text-white mb-1">Portfolio Generator</h3>
+                  <p className="text-slate-400 text-sm mb-4">Generates a catchy "About Me" and "Projects" layout.</p>
+                  <div className="bg-orange-900/30 border border-orange-500/30 p-4 rounded-lg mb-4 text-orange-200 text-sm">
+                    <strong>Tip:</strong> Ensure you filled out Step 1 completely for the best result!
+                  </div>
+                  <button onClick={generatePortfolio} disabled={loading} className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-600 text-white font-bold rounded-lg transition-colors flex justify-center items-center gap-2">
+                    {loading ? "Creating..." : "✨ Generate Portfolio Bio"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-      </div>
+        {/* RIGHT SIDE: Live Preview (Takes 7/12 columns on desktop) */}
+        <div className="lg:col-span-7">
+
+          {/* STICKY CONTAINER: This stays on screen when scrolling the left side! */}
+          <div className="sticky top-8 bg-slate-50 text-slate-900 rounded-2xl shadow-2xl border border-slate-200 flex flex-col h-[calc(100vh-4rem)] min-h-[600px] overflow-hidden">
+
+            {/* Preview Header */}
+            <div className="bg-white border-b border-slate-200 p-5 flex justify-between items-center z-10">
+              <h3 className="font-bold flex items-center gap-2 text-lg">
+                <Sparkles size={20} className="text-yellow-500" />
+                {activeTab === 'resume' ? "Resume Preview" : activeTab === 'letter' ? "Letter Preview" : "Portfolio Preview"}
+              </h3>
+
+              {(resumeResult || letterResult || portfolioResult) && (
+                <button onClick={() => downloadPDF(activeTab === 'resume' ? "My_Resume" : activeTab === 'letter' ? "My_Cover_Letter" : "My_Portfolio_Bio", activeTab === 'resume' ? resumeResult : activeTab === 'letter' ? letterResult : portfolioResult)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
+                  <Download size={16} /> Save PDF
+                </button>
+              )}
+            </div>
+
+            {/* Preview Body (Scrollable) */}
+            <div className="p-8 flex-1 overflow-y-auto bg-[#fafafa]">
+              <div className="max-w-prose mx-auto whitespace-pre-wrap leading-relaxed text-slate-700 text-[15px]">
+                {activeTab === 'resume' ? resumeResult : activeTab === 'letter' ? letterResult : portfolioResult || (
+                  <div className="text-slate-400 text-center mt-32 italic flex flex-col items-center gap-4">
+                    <FileText size={48} className="opacity-20" />
+                    Your AI-generated document will appear here...
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
     </div>
   );
 }
-
-// --- STYLES ---
-const inputStyle = { width: '100%', padding: '12px', margin: '8px 0', borderRadius: '8px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px', transition: 'border-color 0.2s' };
-const labelStyle = { fontSize: '0.9rem', fontWeight: '600', color: '#4b5563', marginTop: '10px', display: 'block' };
-const subTextStyle = { fontSize: '0.9rem', color: '#6b7280', marginBottom: '15px' };
-
-const buttonStyle = { width: '100%', padding: '14px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '15px', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)' };
-
-const downloadBtnStyle = { ...buttonStyle, width: 'auto', padding: '8px 16px', marginTop: 0, background: '#059669', fontSize: '13px', boxShadow: 'none' };
-
-const activeTabStyle = { padding: '12px 25px', background: '#f8f9fa', border: '1px solid #e5e7eb', borderBottom: 'none', borderRadius: '10px 10px 0 0', cursor: 'pointer', fontWeight: 'bold', color: '#2563eb', display: 'flex', gap: '8px', alignItems: 'center' };
-
-const inactiveTabStyle = { padding: '12px 25px', background: '#e5e7eb', border: 'none', borderRadius: '10px 10px 0 0', cursor: 'pointer', color: '#6b7280', display: 'flex', gap: '8px', alignItems: 'center' };
 
 export default App;
