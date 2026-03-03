@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
+import ReactMarkdown from 'react-markdown';
 import { FileText, Mail, Globe, Download, Sparkles, User } from 'lucide-react';
 
 function App() {
@@ -32,7 +33,7 @@ function App() {
     setSharedData({ ...sharedData, [e.target.name]: e.target.value });
   };
 
-  // --- NEW: HELPER TO CALL SECURE SERVERLESS API ---
+  // --- SECURE SERVERLESS API CALL ---
   const callAiApi = async (promptText) => {
     try {
       const response = await fetch('/api/generate', {
@@ -57,20 +58,27 @@ function App() {
     }
   };
 
-  // --- AI FUNCTION: RESUME ---
+  // --- AI FUNCTION: RESUME (UPGRADED FOR FULL STRUCTURE) ---
   const generateResume = async () => {
     if (!sharedData.rawExperience) return alert("Please enter your experience in Step 1!");
     setLoading(prev => ({ ...prev, resume: true }));
 
     const prompt = `
-      You are an expert resume writer. Rewrite this experience into professional resume bullet points.
+      You are an expert executive resume writer. Create a complete, professional resume in Markdown format.
       
       Name: ${sharedData.name}
+      Email: ${sharedData.email}
       Target Role: ${resumeJobTitle}
       Skills: ${sharedData.skills}
-      Messy Experience: ${sharedData.rawExperience}
+      Raw Experience: ${sharedData.rawExperience}
       
-      Format: Return ONLY the clean, professional bullet points. No intro text.
+      Required Structure:
+      1. Header (Name, Email, Target Role)
+      2. Professional Summary (3 impactful sentences)
+      3. Technical Skills
+      4. Professional Experience (Transform the raw experience into highly professional, action-oriented bullet points)
+      
+      Format: Use Markdown strictly. Use # for Name, ## for section titles, and proper bullet points. DO NOT wrap the response in a markdown code block (like \`\`\`markdown). Just return the raw text.
     `;
 
     const result = await callAiApi(prompt);
@@ -92,7 +100,7 @@ function App() {
       Applying to Company: ${letterCompany}
       Job Description: ${letterJobDesc}
       
-      Tone: Confident and professional. Keep it under 200 words.
+      Tone: Confident and professional. Keep it under 250 words. Do not wrap in markdown code blocks.
     `;
 
     const result = await callAiApi(prompt);
@@ -130,22 +138,23 @@ function App() {
     setLoading(prev => ({ ...prev, portfolio: false }));
   };
 
-  // --- DOWNLOAD PDF HELPER ---
-  const downloadPDF = (filename, content) => {
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
-    doc.text(filename.replace(/_/g, " "), 20, 20);
+  // --- UPGRADED DOWNLOAD PDF HELPER (HTML to PDF) ---
+  const downloadPDF = (filename) => {
+    const element = document.getElementById('document-preview');
+    if (!element) return;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
+    const opt = {
+      margin: 0.5,
+      filename: `${filename}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
 
-    const splitText = doc.splitTextToSize(content || "", 180);
-    doc.text(splitText, 20, 30);
-
-    doc.save(`${filename}.pdf`);
+    html2pdf().set(opt).from(element).save();
   };
 
-  // --- CLEAN PREVIEW RENDERER ---
+  // --- CLEAN PREVIEW RENDERER (WITH MARKDOWN STYLING) ---
   const renderPreview = () => {
     if (activeTab === 'portfolio' && portfolioResult) {
       return (
@@ -159,11 +168,31 @@ function App() {
     }
 
     if (activeTab === 'resume' && resumeResult) {
-      return <div className="p-8 max-w-prose mx-auto whitespace-pre-wrap leading-relaxed text-slate-700 text-[15px]">{resumeResult}</div>;
+      return (
+        <div id="document-preview" className="p-8 md:p-12 max-w-3xl mx-auto bg-white shadow-sm border border-slate-200 mt-4 md:mt-8 mb-8">
+          <div className="text-slate-800 leading-relaxed 
+            [&>h1]:text-3xl [&>h1]:font-extrabold [&>h1]:border-b-2 [&>h1]:border-slate-800 [&>h1]:pb-2 [&>h1]:mb-4
+            [&>h2]:text-xl [&>h2]:font-bold [&>h2]:text-blue-700 [&>h2]:mt-6 [&>h2]:mb-2 [&>h2]:uppercase [&>h2]:tracking-wider
+            [&>h3]:text-lg [&>h3]:font-bold [&>h3]:mt-4 [&>h3]:text-slate-900
+            [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:space-y-2 [&>ul]:my-4 [&>ul>li]:text-slate-700
+            [&>p]:mb-4
+            [&>strong]:font-bold [&>strong]:text-slate-900">
+            <ReactMarkdown>{resumeResult}</ReactMarkdown>
+          </div>
+        </div>
+      );
     }
 
     if (activeTab === 'letter' && letterResult) {
-      return <div className="p-8 max-w-prose mx-auto whitespace-pre-wrap leading-relaxed text-slate-700 text-[15px]">{letterResult}</div>;
+      return (
+        <div id="document-preview" className="p-8 md:p-12 max-w-3xl mx-auto bg-white shadow-sm border border-slate-200 mt-4 md:mt-8 mb-8">
+          <div className="text-slate-800 leading-relaxed 
+            [&>p]:mb-6
+            [&>strong]:font-bold [&>strong]:text-slate-900">
+            <ReactMarkdown>{letterResult}</ReactMarkdown>
+          </div>
+        </div>
+      );
     }
 
     // Default Empty State
@@ -232,11 +261,11 @@ function App() {
               {activeTab === 'resume' && (
                 <div className="animate-in fade-in duration-300">
                   <h3 className="text-xl font-bold text-white mb-1">Resume Builder</h3>
-                  <p className="text-slate-400 text-sm mb-4">AI turns your raw experience into professional bullet points.</p>
+                  <p className="text-slate-400 text-sm mb-4">AI turns your raw experience into a structured, professional resume.</p>
                   <label className="block text-sm font-semibold text-slate-300 mb-2">Target Job Title</label>
                   <input placeholder="e.g. Frontend Developer" value={resumeJobTitle} onChange={(e) => setResumeJobTitle(e.target.value)} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all mb-4" />
                   <button onClick={generateResume} disabled={loading.resume} className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-bold rounded-lg transition-colors flex justify-center items-center gap-2">
-                    {loading.resume ? "Generating..." : "✨ Generate Resume Points"}
+                    {loading.resume ? "Generating..." : "✨ Generate Resume"}
                   </button>
                 </div>
               )}
@@ -282,14 +311,13 @@ function App() {
               </h3>
 
               {(activeTab === 'resume' && resumeResult) || (activeTab === 'letter' && letterResult) ? (
-                <button onClick={() => downloadPDF(activeTab === 'resume' ? "My_Resume" : "My_Cover_Letter", activeTab === 'resume' ? resumeResult : letterResult)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
+                <button onClick={() => downloadPDF(activeTab === 'resume' ? "My_Resume" : "My_Cover_Letter")} className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
                   <Download size={16} /> Save PDF
                 </button>
               ) : null}
             </div>
 
             <div className={`flex-1 overflow-y-auto bg-[#fafafa] p-0`}>
-              {/* CLEAN HELPER FUNCTION CALL */}
               {renderPreview()}
             </div>
 

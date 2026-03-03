@@ -1,5 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export const config = {
+    maxDuration: 60, // Extends Vercel timeout to 60 seconds
+};
+
 export default async function handler(req, res) {
     // Only allow POST requests
     if (req.method !== 'POST') {
